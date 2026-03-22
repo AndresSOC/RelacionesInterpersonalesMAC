@@ -14,7 +14,7 @@ deactivate
 
 pip install -r requirements.txt
 
-# levantar contenedores (postgres + pgadmin)
+# levantar contenedores (postgres) recomiendo utilizar como manejador DBAVER
 docker compose up -d --build
 
 # ver estado
