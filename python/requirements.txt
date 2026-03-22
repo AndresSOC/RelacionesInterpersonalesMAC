@@ -1,0 +1,6 @@
+scipy==1.17.0
+pandas==2.2.0
+
+#Conexión con python
+psycopg2==2.9.11
+SQLAlchemy==2.0.48
