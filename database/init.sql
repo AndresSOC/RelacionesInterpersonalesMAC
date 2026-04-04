@@ -8,7 +8,7 @@ CREATE TABLE vinculacion_afectiva (
 CREATE TABLE sociabilidad (
     perfilSocial INT PRIMARY KEY,
     habilidadSocial INT CHECK (habilidadSocial BETWEEN 1 AND 5),
-    amigos BOOLEAN,
+    amigos BOOLEAN, -- 0 = No 1 = Si 
     energiaInterpersonal INT CHECK (energiaInterpersonal BETWEEN 1 AND 5)
 );
 

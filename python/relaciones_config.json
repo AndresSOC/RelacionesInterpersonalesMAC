@@ -1,0 +1,53 @@
+{
+  "semantic_concepts": {
+    "confianzaInterpersonal": [
+      "confianza",
+      "comunicacion",
+      "apoyo",
+      "compania",
+      "seguridad emocional",
+      "sin juicio"
+    ],
+    "tiempoLibre": [
+      "descanso en casa",
+      "salir con amigos",
+      "actividad cultural",
+      "actividad fisica",
+      "pareja",
+      "familia"
+    ],
+    "inciativaInteraccional": [
+      "saludo inicial",
+      "hacer preguntas",
+      "tema en comun",
+      "cumplido o amabilidad",
+      "evita iniciar"
+    ]
+  },
+  "cleaner_by_column": {
+    "habilidadSocial": "clean_habilidad_social",
+    "amigos": "clean_boolean",
+    "noviazgo": "clean_boolean",
+    "enfoque": "clean_enfoque",
+    "colaborativo": "clean_colaborativo",
+    "tiempoSoltero": "clean_tiempo_soltero",
+    "participacion": "clean_participacion",
+    "comunicacion": "clean_comunicacion",
+    "integracion": "clean_integracion",
+    "energiaInterpersonal": "clean_energia_interpersonal"
+  },
+  "int_cast_columns": [
+    "habilidadSocial",
+    "amigos",
+    "noviazgo",
+    "enfoque",
+    "colaborativo",
+    "tiempoSoltero",
+    "participacion",
+    "comunicacion",
+    "integracion",
+    "energiaInterpersonal"
+  ],
+  "semantic_threshold": 0.45,
+  "semantic_max_labels": 3
+}
