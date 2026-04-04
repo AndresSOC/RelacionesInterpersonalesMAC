@@ -1,8 +1,9 @@
 import pandas as pd
 
-url = "C:\proyectoF\RelacionesInterpersonalesMAC\documents\data\interesesPersonales (DifusionCiencia).csv"
+INPUT_PATH = "../documents/data/interesesPersonales (DifusionCiencia).csv"
+OUTPUT_CLEAN_PATH = "../documents/data/interesesPersonales(limpio).csv"
 
-df = pd.read_csv(url)
+df = pd.read_csv(INPUT_PATH)
 
 
 
@@ -47,9 +48,9 @@ for col in df.select_dtypes(include=['object']).columns:
 # =========================
 # 9. Guardar archivo limpio
 # =========================
-df.to_csv("archivo_limpio.csv", index=False)
+df.to_csv(OUTPUT_CLEAN_PATH, index=False)
 
-print("\n✅ Limpieza completada")
+print("\n Limpieza completada")
 print("Nuevo tamaño:", df.shape)
 
 print(df.shape)
