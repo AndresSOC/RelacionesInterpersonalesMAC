@@ -1,5 +1,7 @@
 pandas==2.2.0
 spacy==3.8.7
+#modelo de idioma español mediano de spaCy
+es-core-news-md==3.8.0
 
 #Conexión con python
 psycopg2==2.9.11

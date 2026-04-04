@@ -1,5 +1,5 @@
 ```bash
-# Crear el ambiente virtual DENTRO DE LA CARPETA PYTHON
+# Crear el ambiente virtual
 
 python3 -m venv .venv
 
@@ -19,4 +19,6 @@ docker compose up -d --build
 
 # ver estado
 docker compose ps
+
+# El modelo de spaCy se instala junto con requirements.txt
 ```

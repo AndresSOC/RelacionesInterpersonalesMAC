@@ -5,9 +5,12 @@ import json
 from pathlib import Path
 
 
-INPUT_PATH = "../documents/data/RelacionesPersonales.csv"
-OUTPUT_CLEAN_PATH = "../documents/data/RelacionesPersonales(limpio).csv"
-CONFIG_PATH = Path(__file__).with_name("relaciones_config.json")
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+
+INPUT_PATH = PROJECT_ROOT / "documents" / "data" / "RelacionesPersonales.csv"
+OUTPUT_CLEAN_PATH = PROJECT_ROOT / "documents" / "data" / "RelacionesPersonales(limpio).csv"
+CONFIG_PATH = SCRIPT_DIR / "relaciones_config.json"
 
 
 def load_config(path):
@@ -275,30 +278,39 @@ def apply_column_cleaning(df, nlp_model, cleaner_by_column, int_cast_columns):
     return df
 
 
-df = pd.read_csv(INPUT_PATH)
-nlp = spacy.load("es_core_news_md")
-config = load_config(CONFIG_PATH)
+def clean_relaciones_dataframe(input_path=INPUT_PATH, config_path=CONFIG_PATH):
+    df = pd.read_csv(input_path)
+    nlp = spacy.load("es_core_news_md")
+    config = load_config(config_path)
 
-semantic_concept_docs = build_semantic_concept_docs(nlp, config["semantic_concepts"])
+    semantic_concept_docs = build_semantic_concept_docs(nlp, config["semantic_concepts"])
 
-if "num_cuenta" in df.columns:
-    df["num_cuenta"] = pd.to_numeric(df["num_cuenta"], errors="coerce").astype("Int64")
+    if "num_cuenta" in df.columns:
+        df["num_cuenta"] = pd.to_numeric(df["num_cuenta"], errors="coerce").astype("Int64")
 
-df = apply_column_cleaning(df, nlp, config["cleaner_by_column"], config["int_cast_columns"])
+    df = apply_column_cleaning(df, nlp, config["cleaner_by_column"], config["int_cast_columns"])
 
-# Segunda pasada semantica para acercar el texto a la intencion real.
-for column, concept_docs in semantic_concept_docs.items():
-    if column in df.columns:
-        df[column] = df[column].apply(
-            lambda text: semantic_refine_text(
-                normalize_text(text),
-                concept_docs,
-                nlp,
-                config["semantic_threshold"],
-                config["semantic_max_labels"],
+    # Segunda pasada semantica para acercar el texto a la intencion real.
+    for column, concept_docs in semantic_concept_docs.items():
+        if column in df.columns:
+            df[column] = df[column].apply(
+                lambda text: semantic_refine_text(
+                    normalize_text(text),
+                    concept_docs,
+                    nlp,
+                    config["semantic_threshold"],
+                    config["semantic_max_labels"],
+                )
             )
-        )
 
-df.to_csv(OUTPUT_CLEAN_PATH, index=False)
+    return df
 
-print(f"Archivo generado: {OUTPUT_CLEAN_PATH}")
+
+def main():
+    cleaned_df = clean_relaciones_dataframe()
+    cleaned_df.to_csv(OUTPUT_CLEAN_PATH, index=False)
+    print(f"Archivo limpio generado: {OUTPUT_CLEAN_PATH}")
+
+
+if __name__ == "__main__":
+    main()
