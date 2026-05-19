@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mapa de Negocios CDMX</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=visualization&callback=initMap" async defer></script>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="search-panel">
+      <input type="text" id="search" list="place-list" placeholder="Buscar negocio..." autocomplete="off">
+      <datalist id="place-list"></datalist>
+      <div id="legend">
+        <label><input type="checkbox" id="toggle-circles" checked> Cobertura</label>
+        <label><input type="checkbox" id="toggle-heatmap" checked> Densidad</label>
+      </div>
+      <div id="filters">
+        <div class="filter-row">
+          <label>Rating: <span id="rating-label">0</span>★</label>
+          <input type="range" id="filter-rating" min="0" max="5" step="0.5" value="0">
+        </div>
+        <div class="filter-row">
+          <label>Reseñas:</label>
+          <select id="filter-reviews">
+            <option value="0">Todas</option>
+            <option value="50">≥50 (élite)</option>
+            <option value="100">≥100</option>
+            <option value="500">≥500</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <label>Categoría:</label>
+          <select id="filter-category">
+            <option value="">Todas</option>
+          </select>
+        </div>
+      </div>
+      <div id="radius-control">
+        <div class="radius-row">
+          <label>Radio: <span id="radius-value">5</span> km</label>
+          <button id="expand-btn">Expandir</button>
+        </div>
+        <input type="range" id="radius-slider" min="2" max="20" value="5" step="0.5">
+      </div>
+      <div id="poll-indicator" style="margin-top:6px;font-size:12px;color:#666"></div>
+    </div>
+  </body>
+</html>

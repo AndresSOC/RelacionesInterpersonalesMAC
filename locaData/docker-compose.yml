@@ -1,0 +1,27 @@
+services:
+
+  postgres-app:
+    container_name: localization-data-app
+    image: postgres:17
+    restart: always
+    ports:
+      - "5441:5432"   
+    environment:  
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: locadata
+    volumes:
+      - postgres-app-volume:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    labels:
+      - "com.locadata.service=postgres-app"
+      - "com.locadata.role=database"
+      - "com.locadata.backup=enabled"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d locadata"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-app-volume:

@@ -1,8 +1,11 @@
 pandas==2.2.0
 spacy==3.8.7
-#modelo de idioma español mediano de spaCy
-es-core-news-md==3.8.0
+requests==2.34.2
+matplotlib==3.10.9
+#modelo de idioma español mediano de spaCy - se instala con: python -m spacy download es_core_news_md
 
 #Conexión con python
-psycopg2==2.9.11
+psycopg2-binary==2.9.11
 SQLAlchemy==2.0.48
+#Variables de entorno para python
+python-dotenv==1.2.2

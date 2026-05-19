@@ -1,0 +1,27 @@
+services:
+
+  postgres-app:
+    container_name: Relaciones-Interpersonales-app
+    image: postgres:17
+    restart: always
+    ports:
+      - "5440:5432"   
+    environment:  
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: interpersonalrelation
+    volumes:
+      - postgres-app-volume:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    labels:
+      - "com.relinter.service=postgres-app"
+      - "com.relinter.role=database"
+      - "com.relinter.backup=enabled"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d interpersonalrelation"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-app-volume:

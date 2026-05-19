@@ -1,0 +1,10 @@
+id_arquetipo,Nombre_Arquetipo,Descripcion_Estrategica
+0,Cluster Gastronomico,Zonas de bajo tráfico peatonal pero altísima concentración (62%) de giros de alimentos y bebidas. Ideal para dark kitchens o restaurantes de destino.
+1,Corredor Mixto (Comida y Bienestar),"Ecosistemas equilibrados con alto nivel de actividad (92%), liderados por la oferta gastronómica y servicios de salud/cuidado personal."
+2,Area de Mejora,"Zonas de alto tránsito (71k) dominadas por el retail (35%), pero que presentan el rating de satisfacción más bajo (3.9). Oportunidad de competir con calidad."
+3,Zona Especializada en Servicios/Mantenimiento,"Sectores altamente especializados donde casi el 35% de la oferta se centra en reparaciones, oficios y mantenimiento. Tráfico local/vecinal."
+4,Medico y Farmaceutico,"Polígonos concentrados en salud y farmacias (31%), acompañados de retail. Presentan ligera vulnerabilidad con tasas de actividad del 85%."
+5,Ecosistema Comercial de Alta Satisfacción,"Zonas destacadas por tener la mejor reputación y satisfacción del cliente (Rating 4.4). Combinan alimentos, salud y servicios de alta calidad."
+6,Cluster Educativo y Escolar,"Zonas impulsadas por la vida académica. Poseen la mayor concentración de giros educativos (18%), rodeados de retail y servicios afines."
+7,Corredor de Salud y Finanzas,Corredores de trámites y cuidado. Lideran en servicios de salud (32%) y albergan la mayor presencia de instituciones financieras (12%).
+8,Epicentro Comercial y Tráfico Masivo,"Los gigantes de la CDMX. Zonas con tráfico peatonal colosal (+300k), donde convergen masivamente el retail (36%) y los alimentos (27%)."
