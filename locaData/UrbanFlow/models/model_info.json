@@ -1,0 +1,204 @@
+{
+  "model": "RandomForest",
+  "r2": 0.3644,
+  "rmse": 7.79,
+  "mae": 6.23,
+  "baseline_r2": -1.1459,
+  "baseline_rmse": 14.32,
+  "baseline_mae": 12.08,
+  "ridge_r2": 0.3227,
+  "rf_r2": 0.3644,
+  "target": "composite_score",
+  "target_formula": "rating * log(user_ratings_total + 1)",
+  "target_range": {
+    "min": 0.69,
+    "max": 58.72
+  },
+  "samples": 13231,
+  "features": [
+    "latitud",
+    "longitud",
+    "colonia_avg_rating",
+    "colonia_place_count",
+    "colonia_avg_traffic",
+    "nearby_places_500m",
+    "nearby_places_1km",
+    "nearby_places_2km",
+    "density_500m",
+    "density_1km",
+    "sector_1",
+    "sector_2",
+    "sector_3",
+    "sector_4",
+    "sector_5",
+    "sector_6",
+    "sector_7",
+    "cat_point_of_interest",
+    "cat_establishment",
+    "cat_store",
+    "cat_food",
+    "cat_health",
+    "cat_restaurant",
+    "cat_home_goods_store",
+    "cat_finance",
+    "cat_lodging",
+    "cat_pharmacy",
+    "cat_school",
+    "cat_grocery_or_supermarket",
+    "cat_car_repair",
+    "cat_place_of_worship",
+    "cat_convenience_store",
+    "cat_transit_station",
+    "cat_clothing_store",
+    "cat_general_contractor",
+    "cat_doctor",
+    "cat_church"
+  ],
+  "feature_count": 37,
+  "simulator_categories": [
+    "restaurant",
+    "cafe",
+    "bar",
+    "bakery",
+    "gym",
+    "pharmacy",
+    "beauty_salon",
+    "spa",
+    "supermarket",
+    "convenience_store",
+    "clothing_store",
+    "electronics_store",
+    "bank",
+    "school",
+    "parking",
+    "car_repair",
+    "laundry",
+    "doctor",
+    "dentist",
+    "hospital",
+    "book_store",
+    "hardware_store",
+    "pet_store",
+    "park",
+    "movie_theater",
+    "shopping_mall",
+    "liquor_store",
+    "lawyer",
+    "accounting",
+    "travel_agency"
+  ],
+  "sector_errors": {
+    "Desconocido": {
+      "count": 2647,
+      "rf_rmse": 7.79,
+      "rf_mae": 6.23,
+      "baseline_rmse": 14.32
+    },
+    "Alimentos y Bebidas": {
+      "count": 453,
+      "rf_rmse": 7.72,
+      "rf_mae": 6.28,
+      "baseline_rmse": 13.86
+    },
+    "Retail y Conveniencia": {
+      "count": 541,
+      "rf_rmse": 8.12,
+      "rf_mae": 6.28,
+      "baseline_rmse": 14.6
+    },
+    "Salud y Bienestar": {
+      "count": 296,
+      "rf_rmse": 7.22,
+      "rf_mae": 5.93,
+      "baseline_rmse": 12.5
+    },
+    "Entretenimiento": {
+      "count": 92,
+      "rf_rmse": 7.84,
+      "rf_mae": 6.41,
+      "baseline_rmse": 16.5
+    },
+    "Finanzas y Servicios": {
+      "count": 115,
+      "rf_rmse": 7.16,
+      "rf_mae": 5.85,
+      "baseline_rmse": 14.64
+    },
+    "Educación": {
+      "count": 73,
+      "rf_rmse": 7.69,
+      "rf_mae": 6.05,
+      "baseline_rmse": 15.65
+    },
+    "Servicios y Mantenimiento": {
+      "count": 179,
+      "rf_rmse": 8.4,
+      "rf_mae": 6.68,
+      "baseline_rmse": 14.56
+    }
+  },
+  "rf_top_features": [
+    {
+      "name": "colonia_avg_traffic",
+      "importance": 0.2357
+    },
+    {
+      "name": "latitud",
+      "importance": 0.1001
+    },
+    {
+      "name": "cat_lodging",
+      "importance": 0.0976
+    },
+    {
+      "name": "sector_4",
+      "importance": 0.0718
+    },
+    {
+      "name": "longitud",
+      "importance": 0.0548
+    },
+    {
+      "name": "nearby_places_2km",
+      "importance": 0.0497
+    },
+    {
+      "name": "cat_restaurant",
+      "importance": 0.0493
+    },
+    {
+      "name": "colonia_avg_rating",
+      "importance": 0.0455
+    },
+    {
+      "name": "sector_1",
+      "importance": 0.0412
+    },
+    {
+      "name": "nearby_places_1km",
+      "importance": 0.0354
+    },
+    {
+      "name": "colonia_place_count",
+      "importance": 0.0353
+    },
+    {
+      "name": "density_1km",
+      "importance": 0.0318
+    },
+    {
+      "name": "density_500m",
+      "importance": 0.0297
+    },
+    {
+      "name": "nearby_places_500m",
+      "importance": 0.029
+    },
+    {
+      "name": "cat_food",
+      "importance": 0.0268
+    }
+  ],
+  "confidence_68": 7.79,
+  "confidence_95": 15.27
+}

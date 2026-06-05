@@ -1,0 +1,84 @@
+REPORTE DE LIMPIEZA DE REVIEWS
+VERSIÓN: EMOJIS CONVERTIDOS A TEXTO
+======================================================================
+Fecha y hora de ejecución: 2026-05-24 15:43:11
+Archivo de entrada usado: reviews_output.csv
+Archivo de salida generado: reviews_clean_emoji_text.csv
+
+LIBRERÍA EMOJI
+----------------------------------------------------------------------
+Librería emoji disponible: True
+Los emojis fueron convertidos a nombres de texto en inglés.
+
+RESUMEN GENERAL
+----------------------------------------------------------------------
+Número de filas originales: 62020
+Número de columnas originales: 7
+Reviews vacíos o nulos antes de limpiar: 8722
+Filas después de eliminar vacíos: 53298
+Duplicados exactos eliminados: 18
+Duplicados por place_id + review_text + review_rating eliminados: 0
+Número final de filas: 53280
+Número final de columnas: 18
+Número de negocios únicos finales: 13925
+
+CALIDAD DEL TEXTO
+----------------------------------------------------------------------
+Número de reviews cortos: 3374
+Número de textos limpios vacíos: 0
+Número de reviews con emojis: 6442
+Número total aproximado de emojis: 12253
+Número de reviews con URLs: 1
+Número de reviews con números: 10535
+
+NULOS DESPUÉS DE LA LIMPIEZA
+----------------------------------------------------------------------
+review_id: 0
+source_row: 0
+place_id: 0
+name: 5
+rating: 64
+user_ratings_total: 64
+review_rating: 0
+review_text: 0
+review_text_clean: 0
+has_review_text: 0
+text_length: 0
+word_count: 0
+is_short_review: 0
+clean_text_is_empty: 0
+has_url: 0
+has_numbers: 0
+has_emoji: 0
+emoji_count: 0
+
+COLUMNAS FINALES
+----------------------------------------------------------------------
+- review_id
+- source_row
+- place_id
+- name
+- rating
+- user_ratings_total
+- review_rating
+- review_text
+- review_text_clean
+- has_review_text
+- text_length
+- word_count
+- is_short_review
+- clean_text_is_empty
+- has_url
+- has_numbers
+- has_emoji
+- emoji_count
+
+CONFIGURACIÓN USADA
+----------------------------------------------------------------------
+REMOVE_ACCENTS = False
+KEEP_EMOJIS = False
+REMOVE_EMOJIS = False
+CONVERT_EMOJIS_TO_TEXT = True
+SHORT_REVIEW_WORD_THRESHOLD = 3
+DROP_EMPTY_CLEAN_TEXT = False
+USE_TIMESTAMP_OUTPUT = False

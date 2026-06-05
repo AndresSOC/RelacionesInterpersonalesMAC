@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>locadata — Dashboard CDMX</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    #map { height: 520px; width: 100%; background: #0f172a; }
+    #simMap { height: 400px; width: 100%; background: #0f172a; }
+    .leaflet-container { background: #0f172a; }
+    .leaflet-popup-content-wrapper { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
+    .leaflet-popup-tip { background: #1e293b; }
+    .tab-btn { cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: #10b981; color: #0f172a; border-color: #10b981; }
+    .sector-bar { height: 6px; border-radius: 3px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased">
+  <header class="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="h-11 w-11 rounded-xl bg-emerald-400 text-slate-950 flex items-center justify-center font-black text-xl">📍</div>
+        <div>
+          <h1 class="text-2xl font-black tracking-tight text-white">locadata</h1>
+          <p class="text-sm text-slate-400">Dashboard CDMX — Google Places</p>
+        </div>
+      </div>
+      <nav class="flex gap-1 flex-wrap">
+        <button class="tab-btn active px-4 py-1.5 rounded-full text-sm font-semibold border border-slate-700 text-slate-300" data-view="places">Lugares</button>
+        <button class="tab-btn px-4 py-1.5 rounded-full text-sm font-semibold border border-slate-700 text-slate-300" data-view="zones">Zonas Comerciales</button>
+        <button class="tab-btn px-4 py-1.5 rounded-full text-sm font-semibold border border-slate-700 text-slate-300" data-view="archetypes">Arquetipos</button>
+        <button class="tab-btn px-4 py-1.5 rounded-full text-sm font-semibold border border-slate-700 text-slate-300" data-view="recommendations">Recomendaciones</button>
+        <button class="tab-btn px-4 py-1.5 rounded-full text-sm font-semibold border border-slate-700 text-slate-300" data-view="reviews">Reseñas</button>
+        <button class="tab-btn px-4 py-1.5 rounded-full text-sm font-semibold border border-slate-700 text-slate-300" data-view="simulator">Simulador</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- =========================== -->
+  <!-- VISTA: LUGARES             -->
+  <!-- =========================== -->
+  <main id="view-places" class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <section class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <aside class="lg:col-span-1 bg-slate-900/70 border border-slate-800 rounded-2xl p-5 h-fit space-y-5">
+        <h2 class="text-lg font-bold text-white">Filtros</h2>
+        <div class="space-y-2">
+          <label for="archetypeFilter" class="text-sm font-semibold text-slate-300">Arquetipo comercial</label>
+          <select id="archetypeFilter" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm"><option value="">Todos</option></select>
+        </div>
+        <div class="space-y-2">
+          <label for="minRating" class="text-sm font-semibold text-slate-300">Rating mínimo</label>
+          <select id="minRating" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+            <option value="">Sin filtro</option><option value="4.5">4.5+</option><option value="4">4.0+</option><option value="3">3.0+</option><option value="2">2.0+</option>
+          </select>
+        </div>
+        <button id="loadBtn" class="hidden"></button>
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <input type="checkbox" id="showZones" class="accent-emerald-400" />
+            <span class="text-slate-300">Mostrar zonas comerciales</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <input type="checkbox" id="showPlaces" checked class="accent-emerald-400" />
+            <span class="text-slate-300">Mostrar lugares</span>
+          </label>
+        </div>
+        <div class="border-t border-slate-800 pt-4 space-y-2 text-xs">
+          <p class="font-bold uppercase tracking-wide text-slate-500">Leyenda (Rating)</p>
+          <p><span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span> 4.0+</p>
+          <p><span class="inline-block w-3 h-3 rounded-full bg-amber-400 mr-1"></span> 3.0 – 4.0</p>
+          <p><span class="inline-block w-3 h-3 rounded-full bg-orange-500 mr-1"></span> 2.0 – 3.0</p>
+          <p><span class="inline-block w-3 h-3 rounded-full bg-slate-500 mr-1"></span> Sin rating</p>
+        </div>
+      </aside>
+      <section class="lg:col-span-3 space-y-5">
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl overflow-hidden">
+          <div class="p-5 border-b border-slate-800 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div><h2 id="mapTitle" class="text-xl font-black text-white">Mapa de lugares CDMX</h2><p id="mapSubtitle" class="text-sm text-slate-400 mt-1">Filtra y presiona Cargar</p></div>
+            <span id="statusBadge" class="self-start md:self-center text-xs px-3 py-1 rounded-full border border-slate-700 bg-slate-950 text-slate-400">Sin datos</span>
+          </div>
+          <div id="map"></div>
+        </div>
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5">
+          <h3 class="text-lg font-bold text-white">Top 10 Categorías</h3>
+          <canvas id="catChart" class="mt-4 max-h-72"></canvas>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4"><p class="text-xs text-slate-500 font-bold uppercase">Total lugares</p><p class="text-xl font-black text-emerald-400 mt-1" id="sum-total">--</p></div>
+          <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4"><p class="text-xs text-slate-500 font-bold uppercase">Rating promedio</p><p class="text-xl font-black text-amber-400 mt-1" id="sum-rating">--</p></div>
+          <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4"><p class="text-xs text-slate-500 font-bold uppercase">Categorías</p><p class="text-xl font-black text-sky-400 mt-1" id="sum-categories">--</p></div>
+          <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4"><p class="text-xs text-slate-500 font-bold uppercase">Top categoría</p><p class="text-xl font-black text-pink-400 mt-1" id="sum-topcat">--</p></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- =========================== -->
+  <!-- VISTA: ZONAS COMERCIALES    -->
+  <!-- =========================== -->
+  <main id="view-zones" class="hidden max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-black text-white">Zonas Comerciales (148)</h2>
+        <p class="text-sm text-slate-400 mt-1">Clusters DBSCAN con perfil económico</p>
+      </div>
+      <select id="zoneArchetypeFilter" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+        <option value="">Todos los arquetipos</option>
+      </select>
+    </div>
+    <div id="zoneStats" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+    <div id="zoneGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+  </main>
+
+  <!-- =========================== -->
+  <!-- VISTA: ARQUETIPOS           -->
+  <!-- =========================== -->
+  <main id="view-archetypes" class="hidden max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div><h2 class="text-2xl font-black text-white">Arquetipos Comerciales (K=9)</h2><p class="text-sm text-slate-400 mt-1">Meta-clustering: 9 macro-categorías de zonas</p></div>
+    <div id="archetypeGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+  </main>
+
+  <!-- =========================== -->
+  <!-- VISTA: RECOMENDACIONES       -->
+  <!-- =========================== -->
+  <main id="view-recommendations" class="hidden max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div><h2 class="text-2xl font-black text-white">Recomendaciones de Inversión</h2><p class="text-sm text-slate-400 mt-1">Diagnóstico para zonas con oportunidades detectadas</p></div>
+    <div class="bg-slate-900/70 border border-slate-800 rounded-2xl overflow-hidden overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead>
+          <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase">
+            <th class="px-4 py-3 cursor-pointer hover:text-white" data-sort="cluster">Zona #</th>
+            <th class="px-4 py-3">Locales</th>
+            <th class="px-4 py-3 cursor-pointer hover:text-white" data-sort="trafico">Tráfico</th>
+            <th class="px-4 py-3">Rating</th>
+            <th class="px-4 py-3">Arquetipo</th>
+            <th class="px-4 py-3">Diagnóstico</th>
+            <th class="px-4 py-3">Recomendación</th>
+          </tr>
+        </thead>
+        <tbody id="recTableBody" class="divide-y divide-slate-800"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- =========================== -->
+  <!-- VISTA: RESEÑAS             -->
+  <!-- =========================== -->
+  <main id="view-reviews" class="hidden max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div><h2 class="text-2xl font-black text-white">Análisis de Reseñas</h2><p class="text-sm text-slate-400 mt-1">53,280 reseñas con análisis de sentimiento</p></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-500 uppercase">Positivas</p><p class="text-3xl font-black text-emerald-400 mt-1" id="rev-count-pos">--</p></div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-500 uppercase">Neutrales</p><p class="text-3xl font-black text-amber-400 mt-1" id="rev-count-neu">--</p></div>
+      <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4 text-center"><p class="text-xs text-slate-500 uppercase">Negativas</p><p class="text-3xl font-black text-red-400 mt-1" id="rev-count-neg">--</p></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5">
+        <h3 class="text-lg font-bold text-white">Distribución de Sentimiento</h3>
+        <canvas id="sentimentChart" class="mt-4 max-h-64"></canvas>
+      </div>
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 flex flex-col">
+        <h3 class="text-lg font-bold text-white">Top Reseñas</h3>
+        <div class="flex gap-2 mt-3">
+          <button class="rev-tab-btn active px-3 py-1 rounded-full text-xs font-semibold border border-emerald-700 bg-emerald-950/50 text-emerald-300" data-sent="POS">Positivas</button>
+          <button class="rev-tab-btn px-3 py-1 rounded-full text-xs font-semibold border border-slate-700 text-slate-400" data-sent="NEG">Negativas</button>
+        </div>
+        <div id="topReviewsList" class="mt-3 space-y-2 overflow-y-auto max-h-64 text-xs"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- =========================== -->
+  <!-- VISTA: SIMULADOR           -->
+  <!-- =========================== -->
+  <main id="view-simulator" class="hidden max-w-7xl mx-auto px-4 py-8 space-y-6">
+    <div><h2 class="text-2xl font-black text-white">Simulador de Negocio</h2><p class="text-sm text-slate-400 mt-1">Predice el éxito de un nuevo negocio según ubicación y giro</p></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 bg-slate-900/70 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+          <p class="text-sm text-slate-300">Haz clic en el mapa para seleccionar la ubicación</p>
+          <span id="simCoords" class="text-xs text-slate-500">Sin ubicación</span>
+        </div>
+        <div id="simMap"></div>
+      </div>
+      <div class="space-y-4">
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <label class="block">
+            <span class="text-sm font-semibold text-slate-300">Giro del negocio</span>
+            <select id="simCategory" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm"></select>
+          </label>
+          <button id="simPredictBtn" class="w-full bg-emerald-400 hover:bg-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-bold rounded-lg px-4 py-2 transition" disabled>Predecir éxito</button>
+        </div>
+        <div id="simResult" class="hidden bg-slate-900/70 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div>
+            <p class="text-xs text-slate-500 uppercase font-bold">Puntuación compuesta</p>
+            <p class="text-3xl font-black text-emerald-400" id="simScore">--</p>
+            <p class="text-[10px] text-slate-500 mt-1">Rango esperado: <span id="simRange68" class="text-slate-400">--</span></p>
+            <p class="text-[10px] text-slate-500">95% confianza: <span id="simRange95" class="text-slate-500">--</span></p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-slate-950 rounded-lg p-3"><p class="text-[10px] text-slate-500 uppercase">Rating estimado</p><p class="text-xl font-bold text-amber-400" id="simRating">--</p></div>
+            <div class="bg-slate-950 rounded-lg p-3"><p class="text-[10px] text-slate-500 uppercase">Tráfico estimado</p><p class="text-xl font-bold text-sky-400" id="simTraffic">--</p></div>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 uppercase font-bold mb-2">Factores de influencia</p>
+            <div id="simFactors" class="space-y-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-slate-800 py-6 text-center text-xs text-slate-500">locadata · Dashboard CDMX</footer>
+
+  <script>
+    const API = '';
+    const archetypeColors = ['#f59e0b','#10b981','#ef4444','#6366f1','#ec4899','#06b6d4','#8b5cf6','#f97316','#3b82f6'];
+
+    // --- Tab switching ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('main[id^="view-"]').forEach(v => v.classList.add('hidden'));
+        document.getElementById('view-' + btn.dataset.view).classList.remove('hidden');
+        if (btn.dataset.view === 'places' && map) setTimeout(() => map.invalidateSize(), 100);
+        if (btn.dataset.view === 'simulator') ensureSimMap();
+      });
+    });
+
+    // ======================= LUGARES =======================
+    let map, markersLayer, zonesLayer, catChart;
+    function getColor(r) { if(!r) return '#64748b'; if(r>=4) return '#22c55e'; if(r>=3) return '#f59e0b'; if(r>=2) return '#f97316'; return '#64748b'; }
+    function setStatus(t,ty){ const b=document.getElementById('statusBadge'); b.textContent=t; b.className='self-start md:self-center text-xs px-3 py-1 rounded-full border '; if(ty==='ok') b.className+='border-emerald-700 bg-emerald-950/70 text-emerald-300'; else if(ty==='error') b.className+='border-red-700 bg-red-950/70 text-red-300'; else b.className+='border-slate-700 bg-slate-950 text-slate-400'; }
+
+    function initMap() {
+      map = L.map('map', { preferCanvas: true }).setView([19.3048, -99.1895], 12);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+      markersLayer = L.layerGroup().addTo(map);
+      zonesLayer = L.layerGroup().addTo(map);
+    }
+    function initChart() {
+      catChart = new Chart(document.getElementById('catChart').getContext('2d'), {
+        type: 'bar', data: { labels: [], datasets: [{ label: 'Lugares', data: [], backgroundColor: '#10b981', borderRadius: 4 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+          scales: { x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true },
+                    y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } } } }
+      });
+    }
+    async function loadPlaces() {
+      const archetype = document.getElementById('archetypeFilter').value;
+      const mr = document.getElementById('minRating').value;
+      const showZones = document.getElementById('showZones').checked;
+      const showPlaces = document.getElementById('showPlaces').checked;
+
+      setStatus('Cargando...', 'neutral');
+      const p = new URLSearchParams(); if(archetype) p.append('archetype', archetype); if(mr) p.append('min_rating', mr);
+
+      try {
+        const fetches = [fetch(`${API}/api/places/geojson?${p}`), fetch(`${API}/api/summary?${p}`)];
+        if (showZones) fetches.push(fetch(`${API}/api/clusters/geojson?${p}`));
+        const results = await Promise.all(fetches);
+        const geo = await results[0].json();
+        const sum = await results[1].json();
+
+        markersLayer.clearLayers();
+        zonesLayer.clearLayers();
+
+        if (showPlaces && geo.features.length) {
+          L.geoJSON(geo, {
+            pointToLayer: (f, ll) => L.circleMarker(ll, { radius: Math.max(3, Math.min(10, (f.properties.user_ratings_total||5)/50)), fillColor: getColor(f.properties.rating), color: getColor(f.properties.rating), weight: 1, opacity: 0.8, fillOpacity: 0.5 }),
+            onEachFeature: (f, l) => {
+              const p=f.properties;
+              const sentBadge = (label) => {
+                if (label === 'POS') return '<span class="text-emerald-400">🟢</span>';
+                if (label === 'NEG') return '<span class="text-red-400">🔴</span>';
+                return '<span class="text-amber-400">🟡</span>';
+              };
+              l.bindPopup(`<div style="min-width:200px"><b>${p.business_name||'Sin nombre'}</b><br/>Rating: <b>${p.rating!=null?p.rating:'N/A'}</b> (${(p.user_ratings_total||0).toLocaleString()} reseñas)<br/><small>${p.vicinity||''}</small><div id="reviews-${p.place_id}" class="mt-2 text-[11px] text-slate-400">Cargando reseñas...</div></div>`);
+              l.on('popupopen', async () => {
+                const container = document.getElementById('reviews-'+p.place_id);
+                if (!container || container.dataset.loaded) return;
+                container.dataset.loaded = '1';
+                try {
+                  const r = await fetch(`${API}/api/places/${encodeURIComponent(p.place_id)}/reviews`).then(r=>r.json());
+                  if (!r.length) { container.textContent = 'Sin reseñas.'; return; }
+                  container.innerHTML = r.slice(0,5).map(rv => `<div class="border-t border-slate-700/50 pt-1 mt-1">${sentBadge(rv.sentiment_label)} <span class="text-amber-400">★${rv.review_rating}</span> ${(rv.review_text_clean||rv.review_text||'').substring(0,120)}</div>`).join('');
+                } catch(e) { container.textContent = 'Error al cargar reseñas.'; }
+              });
+          }}).addTo(markersLayer);
+        }
+
+        if (showZones && results.length > 2) {
+          const zoneGeo = await results[2].json();
+          if (zoneGeo.features.length) {
+            const colors = archetypeColors;
+            L.geoJSON(zoneGeo, {
+              pointToLayer: (f, ll) => {
+                const z = f.properties;
+                const color = colors[z.id_arquetipo] || '#64748b';
+                const r = Math.max(10, Math.min(35, Math.sqrt(z.total_negocios || 1) * 4));
+                return L.circleMarker(ll, {
+                  radius: r,
+                  fillColor: color,
+                  color: color,
+                  weight: 2,
+                  opacity: 0.9,
+                  fillOpacity: 0.25,
+                });
+              },
+              onEachFeature: (f, l) => {
+                const z = f.properties;
+                l.bindPopup(`<div style="min-width:200px"><b>Zona ${z.cluster_espacial}</b><br/><span style="color:${colors[z.id_arquetipo]}">${z.nombre_arquetipo||'--'}</span><br/>📍 ${z.nombre_colonia||'--'}<br/>🏪 ${z.total_negocios} locales<br/>★ ${z.rating_promedio} · ${(z.trafico_total/1000).toFixed(0)}k tráfico</div>`);
+              }
+            }).addTo(zonesLayer);
+          }
+        }
+
+        document.getElementById('sum-total').textContent = sum.total_places?.toLocaleString() || '0';
+        document.getElementById('sum-rating').textContent = sum.avg_rating ?? '--';
+        document.getElementById('sum-categories').textContent = sum.total_categories ?? '--';
+        document.getElementById('sum-topcat').textContent = sum.top_categories?.[0]?.category ?? '--';
+        const archName = document.getElementById('archetypeFilter').selectedOptions[0]?.textContent || '';
+        document.getElementById('mapTitle').textContent = archetype ? `Lugares: ${archName}` : 'Mapa de lugares CDMX';
+        document.getElementById('mapSubtitle').textContent = `${sum.total_places?.toLocaleString()||0} lugares · ${sum.total_categories||0} categorías`;
+        setStatus('Datos cargados','ok');
+        catChart.data.labels = (sum.top_categories||[]).map(c=>c.category).reverse();
+        catChart.data.datasets[0].data = (sum.top_categories||[]).map(c=>c.count).reverse();
+        catChart.update();
+        if (geo.features.length) {
+          const bb = L.latLngBounds(geo.features.map(f=>{const c=f.geometry.coordinates; return[c[1],c[0]];}));
+          if (bb.isValid()) map.fitBounds(bb,{padding:[30,30],maxZoom:14});
+        }
+      } catch(e){ setStatus('Error','error'); console.error(e); }
+    }
+    function initPlaces() {
+      fetch(`${API}/api/archetypes`).then(r=>r.json()).then(d=>{ const s=document.getElementById('archetypeFilter'); d.forEach(a=>{const o=document.createElement('option');o.value=a.id_arquetipo;o.textContent=a.nombre_arquetipo;s.appendChild(o);}); });
+      document.getElementById('archetypeFilter').addEventListener('change', loadPlaces);
+      document.getElementById('minRating').addEventListener('change', loadPlaces);
+      document.getElementById('showZones').addEventListener('change', loadPlaces);
+      document.getElementById('showPlaces').addEventListener('change', loadPlaces);
+      loadPlaces();
+    }
+
+    // ======================= ZONAS COMERCIALES =======================
+    const sectorNames = ['Alimentos y Bebidas','Retail y Conveniencia','Salud y Bienestar','Entretenimiento','Finanzas y Servicios','Educación','Servicios y Mantenimiento'];
+    function sectorBar(val, max, idx) {
+      const pct = max > 0 ? (val / max) * 100 : 0;
+      const colors = ['#f59e0b','#10b981','#ec4899','#8b5cf6','#3b82f6','#f97316','#6366f1'];
+      return `<div class="flex items-center gap-2"><span class="text-[10px] text-slate-400 w-20 truncate">${sectorNames[idx]}</span><div class="flex-1 bg-slate-800 rounded-full h-1.5"><div class="sector-bar h-1.5 rounded-full" style="width:${pct}%;background:${colors[idx]}"></div></div><span class="text-[10px] text-slate-500 w-6 text-right">${val}</span></div>`;
+    }
+    function renderZoneCard(z) {
+      const sectors = [z.sector_1, z.sector_2, z.sector_3, z.sector_4, z.sector_5, z.sector_6, z.sector_7];
+      const maxS = Math.max(...sectors, 1);
+      const color = archetypeColors[z.id_arquetipo] || '#64748b';
+      return `<div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4 hover:border-slate-600 transition cursor-pointer" onclick="showZoneDetail(${z.cluster_espacial})">
+        <div class="flex items-start justify-between mb-2">
+          <div>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full" style="background:${color}22;color:${color};border:1px solid ${color}44">Zona ${z.cluster_espacial}</span>
+            ${z.nombre_colonia ? `<p class="text-[11px] text-slate-300 mt-1">${z.nombre_colonia}</p>` : ''}
+            <p class="text-[10px] text-slate-500">${z.nombre_arquetipo || 'Sin arquetipo'}</p>
+          </div>
+          <div class="text-right"><p class="text-lg font-black text-white">${(z.trafico_total/1000).toFixed(0)}k</p><p class="text-[10px] text-slate-500">tráfico</p></div>
+        </div>
+        <div class="space-y-0.5 mb-3">${sectors.map((v,i)=>sectorBar(v,maxS,i)).join('')}</div>
+        <div class="flex gap-3 text-[11px] text-slate-400">
+          <span>${z.total_negocios} locales</span><span class="text-amber-400">★ ${z.rating_promedio}</span><span>${z.tasa_actividad}% activos</span>
+        </div>
+      </div>`;
+    }
+    async function loadZones(archetypeFilter = '') {
+      const p = archetypeFilter ? `?archetype=${archetypeFilter}` : '';
+      const zones = await fetch(`${API}/api/clusters/profiles${p}`).then(r=>r.json());
+      document.getElementById('zoneGrid').innerHTML = zones.map(renderZoneCard).join('');
+      const totalTraffic = zones.reduce((a,z)=>a+Number(z.trafico_total),0);
+      document.getElementById('zoneStats').innerHTML = `
+        <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4"><p class="text-xs text-slate-500 font-bold uppercase">Zonas</p><p class="text-xl font-black text-emerald-400 mt-1">${zones.length}</p></div>
+        <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4"><p class="text-xs text-slate-500 font-bold uppercase">Tráfico total</p><p class="text-xl font-black text-amber-400 mt-1">${(totalTraffic/1e6).toFixed(1)}M</p></div>
+        <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4"><p class="text-xs text-slate-500 font-bold uppercase">Rating prom</p><p class="text-xl font-black text-sky-400 mt-1">${(zones.reduce((a,z)=>a+Number(z.rating_promedio),0)/zones.length).toFixed(2)}</p></div>
+        <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4"><p class="text-xs text-slate-500 font-bold uppercase">Actividad prom</p><p class="text-xl font-black text-pink-400 mt-1">${(zones.reduce((a,z)=>a+Number(z.tasa_actividad),0)/zones.length).toFixed(1)}%</p></div>`;
+    }
+    async function showZoneDetail(id) {
+      const d = await fetch(`${API}/api/clusters/${id}/detail`).then(r=>r.json());
+      if(!d) return;
+      const sectors = [d.sector_1, d.sector_2, d.sector_3, d.sector_4, d.sector_5, d.sector_6, d.sector_7];
+      const maxS = Math.max(...sectors, 1);
+      const color = archetypeColors[d.id_arquetipo] || '#64748b';
+      const html = `<div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onclick="this.remove()">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto space-y-4" onclick="event.stopPropagation()">
+          <div class="flex items-start justify-between"><div><span class="text-sm font-bold px-3 py-1 rounded-full" style="background:${color}22;color:${color};border:1px solid ${color}44">Zona ${d.cluster_espacial}</span><h3 class="text-lg font-black text-white mt-2">${d.nombre_arquetipo || 'Sin arquetipo'}</h3>${d.nombre_colonia ? `<p class="text-sm text-slate-300 mt-1">📍 ${d.nombre_colonia}</p>` : ''}</div><button onclick="this.closest('.fixed').remove()" class="text-slate-500 hover:text-white text-xl">&times;</button></div>
+          <p class="text-xs text-slate-400">${d.descripcion_estrategica || ''}</p>
+          <div class="grid grid-cols-2 gap-3"><div class="bg-slate-950 rounded-lg p-3"><p class="text-[10px] text-slate-500">Tráfico</p><p class="text-lg font-bold text-white">${(d.trafico_total/1000).toFixed(0)}k</p></div><div class="bg-slate-950 rounded-lg p-3"><p class="text-[10px] text-slate-500">Locales</p><p class="text-lg font-bold text-white">${d.total_negocios}</p></div><div class="bg-slate-950 rounded-lg p-3"><p class="text-[10px] text-slate-500">Rating</p><p class="text-lg font-bold text-amber-400">★ ${d.rating_promedio}</p></div><div class="bg-slate-950 rounded-lg p-3"><p class="text-[10px] text-slate-500">Actividad</p><p class="text-lg font-bold text-emerald-400">${d.tasa_actividad}%</p></div></div>
+          <div class="space-y-1">${sectors.map((v,i)=>sectorBar(v,maxS,i)).join('')}</div>
+          ${d.ir_diagnostico ? `<div class="bg-amber-950/50 border border-amber-800 rounded-lg p-3"><p class="text-xs font-bold text-amber-400">${d.ir_diagnostico}</p><p class="text-xs text-amber-200/70 mt-1">${d.ir_recomendacion || ''}</p></div>` : ''}
+        </div></div>`;
+      document.body.insertAdjacentHTML('beforeend', html);
+    }
+    async function initZones() {
+      const archs = await fetch(`${API}/api/archetypes`).then(r=>r.json());
+      const sel = document.getElementById('zoneArchetypeFilter');
+      archs.forEach(a => { const o = document.createElement('option'); o.value = a.id_arquetipo; o.textContent = a.nombre_arquetipo; sel.appendChild(o); });
+      sel.addEventListener('change', () => loadZones(sel.value));
+      loadZones();
+    }
+
+    // ======================= ARQUETIPOS =======================
+    function renderArchetypeCard(a, count) {
+      const color = archetypeColors[a.id_arquetipo] || '#64748b';
+      return `<div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 hover:border-slate-600 transition">
+        <div class="flex items-start justify-between mb-3"><span class="text-3xl font-black" style="color:${color}">0${a.id_arquetipo}</span><span class="text-xs px-3 py-1 rounded-full bg-slate-950 border border-slate-700">${count} zonas</span></div>
+        <h3 class="text-lg font-bold text-white">${a.nombre_arquetipo}</h3>
+        <p class="text-sm text-slate-400 mt-2 leading-relaxed">${a.descripcion_estrategica}</p>
+      </div>`;
+    }
+    async function initArchetypes() {
+      const archs = await fetch(`${API}/api/archetypes`).then(r=>r.json());
+      const allZones = await fetch(`${API}/api/clusters/profiles`).then(r=>r.json());
+      const counts = {}; allZones.forEach(z => { counts[z.id_arquetipo] = (counts[z.id_arquetipo]||0)+1; });
+      document.getElementById('archetypeGrid').innerHTML = archs.map(a => renderArchetypeCard(a, counts[a.id_arquetipo]||0)).join('');
+    }
+
+    // ======================= RECOMENDACIONES =======================
+    let recData = [], recSort = { key: 'trafico', dir: 'desc' };
+    function renderRecTable(data) {
+      document.getElementById('recTableBody').innerHTML = data.map(r => `<tr class="hover:bg-slate-800/50 transition cursor-pointer" onclick="showZoneDetail(${r.cluster_espacial})">
+        <td class="px-4 py-3 font-semibold text-white">Zona ${r.cluster_espacial}</td>
+        <td class="px-4 py-3 text-slate-300">${r.locales_totales}</td>
+        <td class="px-4 py-3 text-amber-400 font-semibold">${(r.trafico_peatonal/1000).toFixed(0)}k</td>
+        <td class="px-4 py-3">★ ${r.rating_promedio}</td>
+        <td class="px-4 py-3 text-xs"><span class="px-2 py-0.5 rounded-full" style="background:${archetypeColors[r.id_arquetipo]}22;color:${archetypeColors[r.id_arquetipo]}">${r.nombre_arquetipo||'--'}</span></td>
+        <td class="px-4 py-3 text-xs text-slate-400 max-w-[200px] truncate">${r.diagnostico||''}</td>
+        <td class="px-4 py-3 text-xs text-slate-500 max-w-[250px] truncate">${r.recomendacion||''}</td>
+      </tr>`).join('');
+    }
+    async function initRecommendations() {
+      recData = await fetch(`${API}/api/recommendations`).then(r=>r.json());
+      renderRecTable(recData);
+      document.querySelectorAll('#view-recommendations [data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.sort;
+          if(recSort.key === key) recSort.dir = recSort.dir==='asc'?'desc':'asc'; else { recSort.key=key; recSort.dir='desc'; }
+          recData.sort((a,b)=>{ const va=key==='trafico'?Number(a.trafico_peatonal):Number(a.cluster_espacial), vb=key==='trafico'?Number(b.trafico_peatonal):Number(b.cluster_espacial); return recSort.dir==='asc'?va-vb:vb-va; });
+          renderRecTable(recData);
+        });
+      });
+    }
+
+    // ======================= RESEÑAS =======================
+    let sentimentChart;
+    function initReviews() {
+      const ctx = document.getElementById('sentimentChart')?.getContext('2d');
+      if (ctx) {
+        sentimentChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels: ['Positivas','Negativas','Neutrales'], datasets: [{ data: [0,0,0], backgroundColor: ['#10b981','#ef4444','#f59e0b'], borderColor: '#0f172a', borderWidth: 2 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } } }
+        });
+      }
+      loadReviewsSentiment();
+      loadTopReviews('POS');
+      document.querySelectorAll('.rev-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.rev-tab-btn').forEach(b => b.classList.remove('active', 'border-emerald-700', 'bg-emerald-950/50', 'text-emerald-300', 'border-red-700', 'bg-red-950/50', 'text-red-300'));
+          const sent = btn.dataset.sent;
+          btn.classList.add('active');
+          if (sent === 'POS') btn.className += ' border-emerald-700 bg-emerald-950/50 text-emerald-300';
+          else btn.className += ' border-red-700 bg-red-950/50 text-red-300';
+          loadTopReviews(sent);
+        });
+      });
+    }
+    async function loadReviewsSentiment() {
+      const r = await fetch(`${API}/api/reviews/sentiment`).then(r=>r.json());
+      const pos = r.find(x=>x.sentiment_label==='POS')?.count || 0;
+      const neg = r.find(x=>x.sentiment_label==='NEG')?.count || 0;
+      const neu = r.find(x=>x.sentiment_label==='NEU')?.count || 0;
+      document.getElementById('rev-count-pos').textContent = pos.toLocaleString();
+      document.getElementById('rev-count-neu').textContent = neu.toLocaleString();
+      document.getElementById('rev-count-neg').textContent = neg.toLocaleString();
+      if (sentimentChart) {
+        sentimentChart.data.datasets[0].data = [pos, neg, neu];
+        sentimentChart.update();
+      }
+    }
+    async function loadTopReviews(sentiment) {
+      const r = await fetch(`${API}/api/reviews/top?sentiment=${sentiment}&limit=15`).then(r=>r.json());
+      const badge = sentiment === 'POS' ? '🟢' : '🔴';
+      document.getElementById('topReviewsList').innerHTML = r.map(rv => `<div class="border-b border-slate-800 pb-2">
+        <div class="flex items-start gap-2"><span>${badge}</span><div><p class="text-slate-300"><b>${rv.name||'--'}</b> <span class="text-amber-400">★${rv.review_rating}</span></p><p class="text-slate-500 mt-0.5">${(rv.review_text_clean||rv.review_text||'').substring(0,180)}</p></div></div>
+      </div>`).join('');
+    }
+
+    // ======================= SIMULADOR =======================
+    let simMap, simMarker, simLat = null, simLon = null, simInitialized = false;
+    function initSimulator() {
+      // Initialize map only when tab is first opened
+    }
+    function ensureSimMap() {
+      if (simInitialized) return;
+      simInitialized = true;
+      const center = L.latLng(19.3048, -99.1895);
+      const radiusM = 20000;
+      simMap = L.map('simMap', { preferCanvas: true }).setView([19.3048, -99.1895], 12);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(simMap);
+      L.circle(center, { radius: radiusM, color: '#10b981', weight: 2, fill: false, dashArray: '8 4', opacity: 0.6 }).addTo(simMap);
+      simMap.on('click', e => {
+        const dist = center.distanceTo(e.latlng);
+        const inBounds = dist <= radiusM;
+        if (simMarker) simMap.removeLayer(simMarker);
+        if (inBounds) {
+          simLat = e.latlng.lat.toFixed(6);
+          simLon = e.latlng.lng.toFixed(6);
+          simMarker = L.marker([simLat, simLon], { icon: L.divIcon({ className: 'sim-marker', html: '<div style=\"background:#10b981;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px #10b981\"></div>', iconSize: [16,16], iconAnchor: [8,8] }) }).addTo(simMap);
+          document.getElementById('simCoords').textContent = simLat + ', ' + simLon + ' (' + (dist/1000).toFixed(1) + 'km del centro)';
+          document.getElementById('simPredictBtn').disabled = false;
+        } else {
+          simLat = null; simLon = null;
+          simMarker = L.marker(e.latlng, { icon: L.divIcon({ className: 'sim-marker', html: '<div style=\"background:#ef4444;width:12px;height:12px;border-radius:50%;border:2px solid white\"></div>', iconSize: [12,12], iconAnchor: [6,6] }) }).addTo(simMap);
+          document.getElementById('simCoords').textContent = '🔴 Fuera del área de cobertura (radio 20km desde Perisur)';
+          document.getElementById('simPredictBtn').disabled = true;
+        }
+      });
+      fetch(`${API}/api/predict/categories`).then(r=>r.json()).then(cats => {
+        const s = document.getElementById('simCategory');
+        cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; s.appendChild(o); });
+      }).catch(() => {
+        ['restaurant','cafe','bar','gym','pharmacy','store','school','bank','parking','doctor'].forEach(c => {
+          const o = document.createElement('option'); o.value = c; o.textContent = c; document.getElementById('simCategory').appendChild(o);
+        });
+      });
+      document.getElementById('simPredictBtn').addEventListener('click', runPrediction);
+    }
+    async function runPrediction() {
+      if (!simLat || !simLon) return;
+      const cat = document.getElementById('simCategory').value;
+      const btn = document.getElementById('simPredictBtn');
+      btn.disabled = true; btn.textContent = 'Calculando...';
+      try {
+        const r = await fetch(`${API}/api/predict/predict`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat: parseFloat(simLat), lon: parseFloat(simLon), category: cat })
+        }).then(r=>r.json());
+        document.getElementById('simResult').classList.remove('hidden');
+        document.getElementById('simScore').textContent = r.composite_score?.toFixed(1) || '--';
+        document.getElementById('simRating').textContent = '★ ' + (r.predicted_rating?.toFixed(2) || '--');
+        document.getElementById('simTraffic').textContent = (r.predicted_traffic || 0) + ' reseñas';
+        document.getElementById('simRange68').textContent = (r.confidence_68_low?.toFixed(1) || '--') + ' – ' + (r.confidence_68_high?.toFixed(1) || '--') + ' (±' + (r.rmse||'?') + ')';
+        document.getElementById('simRange95').textContent = (r.confidence_95_low?.toFixed(1) || '--') + ' – ' + (r.confidence_95_high?.toFixed(1) || '--');
+        const factorDiv = document.getElementById('simFactors');
+        factorDiv.innerHTML = (r.factors || []).map(f => {
+          const up = f.contribution > 0;
+          const barW = Math.min(100, Math.abs(f.contribution) * 8);
+          return `<div class="flex items-center gap-2 text-[11px]"><span class="w-6 text-center">${up ? '🟢' : '🔴'}</span><span class="w-28 truncate text-slate-400">${f.feature}</span><div class="flex-1 bg-slate-800 rounded-full h-2"><div class="h-2 rounded-full" style="width:${barW}%;background:${up?'#10b981':'#ef4444'}"></div></div><span class="w-10 text-right font-mono ${up?'text-emerald-400':'text-red-400'}">${f.contribution>0?'+':''}${f.contribution.toFixed(1)}</span></div>`;
+        }).join('');
+      } catch(e) {
+        document.getElementById('simScore').textContent = 'Error';
+      }
+      btn.disabled = false; btn.textContent = 'Predecir éxito';
+    }
+
+    // ======================= INIT =======================
+    initMap(); initChart(); initPlaces(); initZones(); initArchetypes(); initRecommendations(); initReviews();
+  </script>
+</body>
+</html>
