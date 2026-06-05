@@ -9,3 +9,6 @@ psycopg2-binary==2.9.11
 SQLAlchemy==2.0.48
 #Variables de entorno para python
 python-dotenv==1.2.2
+
+tensorflow==2.21.0
+scikit-learn==1.8.0
